@@ -20,6 +20,7 @@ class ProductRead(ProductAdd):
 class Item(BaseModel):
     name: str = Field(..., min_length=1, max_length=40, description='Название товара')
     amount: int = Field(..., gt=0, description='Количество товаров')
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderAdd(BaseModel):
@@ -27,10 +28,17 @@ class OrderAdd(BaseModel):
     status: Optional[StatusModel] = Field(StatusModel.PENDING, description='Статус заказа')
 
 
+class OrderItemRead(BaseModel):
+    product_id: int
+    amount: int
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OrderRead(BaseModel):
     id: int
     status: StatusModel
     created: dt.datetime
+    items: List[OrderItemRead]
     model_config = ConfigDict(from_attributes=True)
 
 

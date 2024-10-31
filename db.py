@@ -46,8 +46,9 @@ class OrderModel(Model):
     status: Mapped[StatusModel] = mapped_column(Enum(StatusModel),
                                                  nullable=False,
                                                  default=StatusModel.PENDING)
-    # items = relationship('OrderItemModel', back_populates='order', cascade='CASCADE')
-    items: Mapped[List['OrderItemModel']] = relationship(back_populates="order", lazy="selectin")
+    items: Mapped[List['OrderItemModel']] = relationship(back_populates='order',
+                                                         lazy='selectin',
+                                                         cascade='all, delete-orphan')
 
     def __repr__(self) -> str:
         return f'Статус заказа номер {self.id} - {self.status}.'
@@ -61,7 +62,9 @@ class OrderItemModel(Model):
     product_id: Mapped[int] = mapped_column(Integer, ForeignKey('product.id', ondelete='CASCADE'))
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
 
-    order: Mapped["OrderModel"] = relationship("OrderModel", back_populates="items", lazy="selectin")
+    order: Mapped['OrderModel'] = relationship('OrderModel',
+                                               back_populates='items',
+                                               lazy='selectin')
 
     __table_args__ = (
         CheckConstraint('amount > 0', name='check_amount_positive'),

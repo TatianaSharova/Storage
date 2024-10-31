@@ -1,57 +1,84 @@
 from sqlalchemy import select
 from db import db_session, ProductModel, OrderModel, OrderItemModel
 from sqlalchemy.exc import IntegrityError
-from schemas import ProductAdd, ProductRead, OrderAdd, OrderRead
+from schemas import ProductAdd, ProductRead, OrderAdd, OrderRead, OrderStatusUpdate
 from fastapi import HTTPException
 
 
 class ProductRepository:
-   '''Так как работа с одной таблицей, возьмем методы в класс.'''
-   @classmethod
-   async def add_product(cls, task: ProductAdd) -> int:
-       async with db_session() as session:
-           data = task.model_dump()
-           new_product = ProductModel(**data)
-           try:
-               session.add(new_product)
-               await session.flush()
-               await session.commit()
-           except IntegrityError:
-               session.rollback()
-               raise HTTPException(status_code=400,
-                                   detail='Товар с таким названием уже существует.')
-           return new_product.id
+    '''Методы для работы с товарами.'''
+    @classmethod
+    async def add_product(cls, product: ProductAdd) -> int:
+        async with db_session() as session:
+            data = product.model_dump()
+            new_product = ProductModel(**data)
+            try:
+                session.add(new_product)
+                await session.flush()
+                await session.commit()
+            except IntegrityError:
+                session.rollback()
+                raise HTTPException(status_code=400,
+                                    detail='Товар с таким названием уже существует.')
+            return new_product.id
 
-   @classmethod
-   async def get_all(cls) -> list[ProductRead]:
-       async with db_session() as session:
-           query = select(ProductModel)
-           result = await session.execute(query)
-           product_models = result.scalars().all()
-           products = [ProductRead.model_validate(
-               product_model
-            ) for product_model in product_models]
-           return products
+    @classmethod
+    async def get_all(cls) -> list[ProductRead]:
+        async with db_session() as session:
+            query = select(ProductModel)
+            result = await session.execute(query)
+            product_models = result.scalars().all()
+            products = [ProductRead.model_validate(
+                product_model
+             ) for product_model in product_models]
+            return products
     
-   @classmethod
-   async def get_product(cls, product_id: int) -> ProductRead:
-       async with db_session() as session:
-           query = select(ProductModel).where(ProductModel.id == product_id)
-           result = await session.execute(query)
-           product_model = result.scalar_one_or_none()
-           if product_model is None:
-               raise HTTPException(status_code=404, detail='Товар не найден.')
-           product = ProductRead.model_validate(product_model)
-           return product
+    @classmethod
+    async def get_product(cls, product_id: int) -> ProductRead:
+        async with db_session() as session:
+            query = select(ProductModel).where(ProductModel.id == product_id)
+            result = await session.execute(query)
+            product_model = result.scalar_one_or_none()
+            if product_model is None:
+                raise HTTPException(status_code=404, detail='Товар не найден.')
+            product = ProductRead.model_validate(product_model)
+            return product
+
+    @classmethod
+    async def delete_product(cls, product_id: int) -> None:
+        async with db_session() as session:
+            query = select(ProductModel).where(ProductModel.id == product_id)
+            result = await session.execute(query)
+            product_model = result.scalar_one_or_none()
+            if product_model is None:
+                raise HTTPException(status_code=404, detail='Товар не найден.')
+            session.delete(product_model)
+            session.commit()
+            return
+    
+    @classmethod
+    async def update_product(cls, product_id: int,
+                             product: ProductAdd) -> ProductRead:
+        async with db_session() as session:
+            query = select(ProductModel).where(ProductModel.id == product_id)
+            result = await session.execute(query)
+            product_model = result.scalar_one_or_none()
+            if product_model is None:
+                raise HTTPException(status_code=404, detail='Товар не найден.')
+            
+            for key, value in product.model_dump().items():
+                setattr(product_model, key, value)
+        
+            session.add(product_model)
+            await session.commit()
+            return product_model.id
 
 
 class OrderRepository:
-    '''
-    '''
+    '''Методы для работы с заказами.'''
     @classmethod
     async def add_order(cls, order: OrderAdd) -> int:
        async with db_session() as session:
-        #    data = order.model_dump()
            new_order = OrderModel(status=order.status)
            session.add(new_order)
            await session.flush()
@@ -85,8 +112,37 @@ class OrderRepository:
        async with db_session() as session:
            query = select(OrderModel)
            result = await session.execute(query)
-           product_models = result.scalars().all()
-           products = [OrderRead.model_validate(
-               product_model
-            ) for product_model in product_models]
-           return products
+           order_models = result.scalars().all()
+           orders = [OrderRead.model_validate(
+               order_model
+            ) for order_model in order_models]
+           return orders
+    
+    @classmethod
+    async def get_order(cls, order_id: int) -> OrderRead:
+       async with db_session() as session:
+           query = select(OrderModel).where(OrderModel.id == order_id)
+           result = await session.execute(query)
+           order_model = result.scalar_one_or_none()
+
+           if order_model is None:
+               raise HTTPException(status_code=404, detail='Заказ не найден.')
+           order = OrderRead.model_validate(order_model)
+           return order
+    
+    @classmethod
+    async def update_status(cls, order_id: int,
+                            status: OrderStatusUpdate) -> OrderRead:
+       async with db_session() as session:
+           query = select(OrderModel).where(OrderModel.id == order_id)
+           result = await session.execute(query)
+           order_model = result.scalar_one_or_none()
+           if order_model is None:
+               raise HTTPException(status_code=404, detail='Заказ не найден.')
+           
+           order_model.status = status.status
+           session.add(order_model)
+           await session.flush()
+           await session.commit()
+           order = OrderRead.model_validate(order_model)
+           return order
