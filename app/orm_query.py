@@ -1,7 +1,7 @@
 from sqlalchemy import select
-from db import db_session, ProductModel, OrderModel, OrderItemModel
+from app.db import db_session, ProductModel, OrderModel, OrderItemModel
 from sqlalchemy.exc import IntegrityError
-from schemas import ProductAdd, ProductRead, OrderAdd, OrderRead, OrderStatusUpdate
+from app.schemas import ProductAdd, ProductRead, OrderAdd, OrderRead, OrderStatusUpdate
 from fastapi import HTTPException
 
 
@@ -14,10 +14,9 @@ class ProductRepository:
             new_product = ProductModel(**data)
             try:
                 session.add(new_product)
-                await session.flush()
                 await session.commit()
             except IntegrityError:
-                session.rollback()
+                await session.rollback()
                 raise HTTPException(status_code=400,
                                     detail='Товар с таким названием уже существует.')
             return new_product.id
@@ -52,8 +51,8 @@ class ProductRepository:
             product_model = result.scalar_one_or_none()
             if product_model is None:
                 raise HTTPException(status_code=404, detail='Товар не найден.')
-            session.delete(product_model)
-            session.commit()
+            await session.delete(product_model)
+            await session.commit()
             return
     
     @classmethod
@@ -90,10 +89,8 @@ class OrderRepository:
                result = await session.execute(query)
                product = result.scalar_one_or_none()
                if product is None:
-                   session.rollback()
                    raise HTTPException(status_code=404, detail=f'Товар {item.name} не найден.')
                if product.in_stock < item.amount:
-                   session.rollback()
                    raise HTTPException(status_code=400,
                                        detail=(f'Недостаточно {item.name} для заказа. '
                                                f'Остаток на складе - {product.in_stock}'))

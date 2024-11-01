@@ -1,4 +1,5 @@
 fastapi
 uvicorn
 SQLAlchemy
-aiosqlite delete
+asyncpg
+python-dotenv

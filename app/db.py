@@ -4,9 +4,17 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer, String, DateTime, func, Float, SmallInteger, CheckConstraint, Enum
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
 
 engine = create_async_engine(
-    'sqlite+aiosqlite:///storage.db'
+    # 'sqlite+aiosqlite:///storage.db'
+    f'postgresql+asyncpg://{DB_USER}:{DB_PASSWORD}@postgres/{DB_NAME}'
 )
 
 db_session = async_sessionmaker(engine, expire_on_commit=False)

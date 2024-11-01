@@ -1,9 +1,9 @@
 from typing import Annotated
 from fastapi import Depends, status
 from fastapi import APIRouter
-from orm_query import ProductRepository, OrderRepository
+from app.orm_query import ProductRepository, OrderRepository
 
-from schemas import ProductAdd, OrderAdd, OrderStatusUpdate
+from app.schemas import ProductAdd, OrderAdd, OrderStatusUpdate
 
 product_router = APIRouter(
    prefix='/products',

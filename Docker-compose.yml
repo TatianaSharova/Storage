@@ -1,0 +1,63 @@
+# version: '3'
+
+# volumes:
+#   postgres_data:
+
+# services:
+#   db:
+#     container_name: postgres
+#     image: postgres:13.10
+#     environment:
+#       - POSTGRES_DB=database
+#       - POSTGRES_USER=${DB_USER}
+#       - POSTGRES_PASSWORD=${DB_PASSWORD}
+#     ports:
+#       - - ${POSTGRES_PORT}:5432
+#     env_file: .env
+#     volumes:
+#       - pg_data:/var/lib/postgresql/data
+
+#   backend:
+#     container_name: app
+#     build: ./
+#     depends_on:
+#       - db
+#     command: bash -c 'while !</dev/tcp/postgres/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0 --port 8000'
+#     volumes:
+#       - ./app:/code
+#     restart: always
+#     env_file: .env
+#     ports:
+#       - ${PORT}:8000
+
+
+version: '3.8'
+
+volumes:
+  pg_data:
+
+services:
+  db:
+    container_name: postgres
+    image: postgres:13.10
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    env_file: .env
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  app:
+    build: ./
+    container_name: fastapi_app
+    command: bash -c 'while !</dev/tcp/postgres/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0 --port 8000'
+    env_file: .env
+    environment:
+      DATABASE_URL: 'postgresql+asyncpg://${DB_USER}:${DB_PASSWORD}@postgres/${DB_NAME}'
+    ports:
+      - ${PORT}:8000
+    depends_on:
+      - db

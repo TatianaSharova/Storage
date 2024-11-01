@@ -1,6 +1,6 @@
 from typing import Optional, List
 import datetime as dt
-from db import StatusModel
+from app.db import StatusModel
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -44,5 +44,3 @@ class OrderRead(BaseModel):
 
 class OrderStatusUpdate(BaseModel):
     status: StatusModel
-
-
