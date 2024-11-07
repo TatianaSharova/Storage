@@ -131,5 +131,5 @@ dmypy.json
 # .idea
 .idea
 
-# db
-storage.db
+# test db
+test_db.db
