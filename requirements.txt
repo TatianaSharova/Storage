@@ -3,3 +3,7 @@ uvicorn
 SQLAlchemy
 asyncpg
 python-dotenv
+pytest
+httpx
+aiosqlite
+pytest_asyncio
