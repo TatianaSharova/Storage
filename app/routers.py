@@ -53,7 +53,7 @@ async def update_product(product_id: int,
     return {'data': product, 'product_id': product_id}
 
 
-@order_router.post('')
+@order_router.post('', status_code=status.HTTP_201_CREATED)
 async def add_order(order: OrderAdd,
                     session: AsyncSession = Depends(get_db)):
     order_id = await OrderRepository.add_order(order, session)
