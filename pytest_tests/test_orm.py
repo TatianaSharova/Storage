@@ -97,6 +97,25 @@ async def test_update_product(client: AsyncClient, async_db: AsyncSession,
 
 
 @pytest.mark.asyncio
+async def test_add_order(client: AsyncClient, async_db: AsyncSession,
+                         product: ProductModel):
+    '''Проверка на создание заказа.'''
+    data = {
+        'items': [
+            {'name': product.name,
+             'amount': product.in_stock}
+        ]
+    }
+
+    response = await client.post('/orders', json=data)
+
+    response_data = response.json()
+    assert response.status_code == HTTPStatus.CREATED
+    assert response_data['data']['items'][0]['name'] == product.name
+    assert response_data['data']['items'][0]['amount'] == product.in_stock
+
+
+@pytest.mark.asyncio
 async def test_get_order_by_id(client: AsyncClient, async_db: AsyncSession,
                                order: OrderModel) -> None:
     '''Проверка на получение товара по id.'''
