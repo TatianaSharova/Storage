@@ -12,7 +12,7 @@ git clone https://github.com/TatianaSharova/Storage.git
 ```
 **_Запуск через Docker-compose:_**                                                 
 
-1. Создайте файл env. и наполните своими данными:
+Создайте файл env. и наполните своими данными:
 ```
 PORT=8000
 DB_USER= никнем юзера
@@ -20,7 +20,7 @@ DB_PASSWORD= пароль для бд
 POSTGRES_PORT=5432
 DB_NAME= название бд
 ```
-2. Запустите проект:          
+Запустите проект:          
 ```
 docker compose up
 ```
